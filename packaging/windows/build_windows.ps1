@@ -50,7 +50,9 @@ function Sign-Artifact([string]$Path) {
 }
 
 if (-not $SkipInstall) {
-    if (-not (Test-Path ".build-venv")) { Invoke-Native $Python @("-3","-m","venv",".build-venv") }
+    # "-3" is a py-launcher flag; a plain interpreter path (CI passes setup-python's python) takes no version switch.
+    $venvArgs = if ((Split-Path $Python -Leaf) -in @("py", "py.exe")) { @("-3","-m","venv",".build-venv") } else { @("-m","venv",".build-venv") }
+    if (-not (Test-Path ".build-venv")) { Invoke-Native $Python $venvArgs }
     $Py = Join-Path $Root ".build-venv\Scripts\python.exe"
     Invoke-Native $Py @("-m","pip","install","--upgrade","pip")
     Invoke-Native $Py @("-m","pip","install","-r","requirements.txt","pyinstaller>=6.10,<7")

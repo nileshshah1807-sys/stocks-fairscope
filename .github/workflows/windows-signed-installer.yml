@@ -50,7 +50,8 @@ jobs:
         shell: powershell
         run: |
           # Named (hashtable) splatting: $args is reserved, and array splatting passed "-Python" as the Python path.
-          $buildParams=@{ Python = "py" }
+          # The setup-python interpreter, not "py": the launcher picks the newest installed Python, which may predate wheel support.
+          $buildParams=@{ Python = (Get-Command python).Source }
           if ("${{ inputs.require_signature }}" -eq "true") { $buildParams.RequireSignature = $true }
           & .\packaging\windows\build_windows.ps1 @buildParams
 
