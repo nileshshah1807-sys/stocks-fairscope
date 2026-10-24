@@ -21,7 +21,7 @@ jobs:
           cache: pip
       - name: Linux Qt libraries
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 xvfb
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libegl1 libgl1 xvfb
       - name: Install dependencies
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
       - name: Ruff static checks

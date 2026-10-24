@@ -49,9 +49,10 @@ jobs:
       - name: Build and sign
         shell: powershell
         run: |
-          $args=@("-Python","py")
-          if ("${{ inputs.require_signature }}" -eq "true") { $args += "-RequireSignature" }
-          & .\packaging\windows\build_windows.ps1 @args
+          # Named (hashtable) splatting: $args is reserved, and array splatting passed "-Python" as the Python path.
+          $buildParams=@{ Python = "py" }
+          if ("${{ inputs.require_signature }}" -eq "true") { $buildParams.RequireSignature = $true }
+          & .\packaging\windows\build_windows.ps1 @buildParams
 
       - name: Verify trusted signature
         if: ${{ inputs.require_signature }}

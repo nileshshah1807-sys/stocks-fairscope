@@ -37,7 +37,9 @@ class WebVersionTests(unittest.TestCase):
         for name in ("Dockerfile","README.md","requirements.txt","streamlit_app.py","assets/logo_256.png"):self.assertTrue((target/name).is_file(),name)
         self.assertIn("sdk: docker",(target/"README.md").read_text(encoding="utf-8"));self.assertNotIn("PySide6",(target/"requirements.txt").read_text(encoding="utf-8"))
         # Import the engine from the bundle alone (no repository folder on the path), as the Space will.
-        check=subprocess.run([sys.executable,"-c","import data_provider, pdf_report, valuation"],cwd=target,capture_output=True,text=True,env={**os.environ,"LOCALAPPDATA":tempfile.mkdtemp(),"XDG_DATA_HOME":tempfile.mkdtemp(),"PYTHONPATH":""})
+        # Coverage settings would follow the child process into the bundle folder, where the project's branch-coverage config is absent.
+        env={key:value for key,value in os.environ.items() if not key.startswith(("COV_CORE","COVERAGE"))}|{"LOCALAPPDATA":tempfile.mkdtemp(),"XDG_DATA_HOME":tempfile.mkdtemp(),"PYTHONPATH":""}
+        check=subprocess.run([sys.executable,"-c","import data_provider, pdf_report, valuation"],cwd=target,capture_output=True,text=True,env=env)
         self.assertEqual(check.returncode,0,check.stderr[-800:])
 
 if __name__=="__main__":unittest.main()
