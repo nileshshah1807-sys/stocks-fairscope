@@ -1,0 +1,442 @@
+{
+  "analysis_id": "FS-20260820-B660468ACE65",
+  "parent_analysis_id": null,
+  "created_at": "2026-08-20T08:26:41.050804+00:00",
+  "app_version": "10.1.0",
+  "model_version": "FairValueEngine 4.3",
+  "audit_schema_version": "1.3",
+  "symbol": "AAPL",
+  "company": "Apple Inc.",
+  "market": "US",
+  "currency": "USD",
+  "data_sources": [
+    "Yahoo Finance"
+  ],
+  "source_updated_date": "2026-08-19",
+  "retrieved_at": "2026-08-20 06:41 UTC",
+  "cache_status": "fresh cache",
+  "cache_age_hours": 1.7450971983538734,
+  "is_stale": false,
+  "source_checks": {
+    "Yahoo Finance": "Price/fundamentals retrieved 2026-08-19"
+  },
+  "source_discrepancies": [],
+  "data_lineage": [
+    {
+      "metric": "Market price",
+      "value": "USD 316.83",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Official-site price selected when available; otherwise latest Yahoo close",
+      "status": "Selected"
+    },
+    {
+      "metric": "One-year price history",
+      "value": "251 sessions",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/history",
+      "period": "Through 2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Latest available closing prices; last 252 sessions retained",
+      "status": "Received"
+    },
+    {
+      "metric": "Shares outstanding",
+      "value": "14,594,180,000",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/key-statistics",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Reported shares outstanding; fallback to share-history endpoint",
+      "status": "Received"
+    },
+    {
+      "metric": "Revenue history",
+      "value": "4 annual values",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/financials",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Up to five annual statement values, latest first",
+      "status": "Received"
+    },
+    {
+      "metric": "Normalized net income",
+      "value": "USD 98,399,000,000.00",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/financials",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Median of available annual net-income observations",
+      "status": "Normalized"
+    },
+    {
+      "metric": "Normalized free cash flow",
+      "value": "USD 104,195,500,000.00",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/cash-flow",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Median of annual FCF; CFO minus capex fallback when needed",
+      "status": "Normalized"
+    },
+    {
+      "metric": "Normalized EPS",
+      "value": "USD 6.7423",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/financials",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Median annual net income divided by current shares; reported EPS fallback",
+      "status": "Derived"
+    },
+    {
+      "metric": "Book value per share",
+      "value": "USD 7.3600",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/balance-sheet",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Public top ratio or equity divided by shares",
+      "status": "Selected"
+    },
+    {
+      "metric": "Trailing P/E",
+      "value": "35.599x",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Direct provider ratio",
+      "status": "Selected"
+    },
+    {
+      "metric": "Market capitalization",
+      "value": "USD 4,623,874,129,920.00",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Direct provider market-cap value",
+      "status": "Selected"
+    },
+    {
+      "metric": "Return on equity",
+      "value": "148.75%",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/key-statistics",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Direct ratio; Screener percentage converted to decimal",
+      "status": "Selected"
+    },
+    {
+      "metric": "Total debt",
+      "value": "USD 84,343,996,416.00",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/balance-sheet",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Latest available annual balance-sheet value",
+      "status": "Received"
+    },
+    {
+      "metric": "Cash and equivalents",
+      "value": "USD 62,399,000,576.00",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL/balance-sheet",
+      "period": "2025, 2024, 2023, 2022, 2021",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Latest available annual balance-sheet value",
+      "status": "Received"
+    },
+    {
+      "metric": "Peer median P/B",
+      "value": "8.131x",
+      "source": "Yahoo Finance",
+      "source_url": "https://finance.yahoo.com/quote/AAPL",
+      "period": "2026-08-19",
+      "retrieved_at": "2026-08-20 06:41 UTC",
+      "transformation": "Median of 12 screened same-region industry/sector peers after outlier bounds",
+      "status": "Derived"
+    }
+  ],
+  "financial_company_metrics": null,
+  "external_reviews": [],
+  "automatic_assumptions": {
+    "growth": 0.101606296016627,
+    "discount_rate": 0.09,
+    "terminal_growth": 0.025,
+    "years": 10,
+    "dcf_weight": 0.55,
+    "graham_weight": 0.1,
+    "relative_weight": 0.35,
+    "margin_of_safety": 0.2
+  },
+  "reviewed_assumptions": {
+    "growth": 0.101606296016627,
+    "discount_rate": 0.09,
+    "terminal_growth": 0.025,
+    "years": 10,
+    "dcf_weight": 0.55,
+    "graham_weight": 0.1,
+    "relative_weight": 0.35,
+    "margin_of_safety": 0.2
+  },
+  "manual_overrides": {},
+  "assumption_preset": "Automatic defaults",
+  "assumption_note": "",
+  "methodology_profile": "Technology operating company",
+  "model_labels": {
+    "dcf": "Two-stage DCF",
+    "graham": "Graham value",
+    "relative": "Peer P/E"
+  },
+  "model_notes": [
+    "Cash flow and earnings inputs use up to five annual observations and median normalization when available.",
+    "Available model weights are automatically re-normalized when a model cannot be calculated.",
+    "Dynamic valuation buffer is 29% versus the 20% minimum after financial, quality, governance, data, sector, and model-disagreement adjustments. This buffer does not guarantee protection from loss."
+  ],
+  "peer_symbols": [
+    "NVDA",
+    "MSFT",
+    "TSM",
+    "AVGO",
+    "SKHY",
+    "MU",
+    "AMD",
+    "ASML",
+    "ASMLF",
+    "INTC",
+    "CSCO",
+    "SSNLF"
+  ],
+  "scenario_results": {
+    "Conservative": {
+      "name": "Conservative",
+      "growth": 0.061606296016627,
+      "discount_rate": 0.11,
+      "terminal_growth": 0.015000000000000001,
+      "dcf": 97.63134403155124,
+      "graham": 33.4145532833118,
+      "relative": 217.6521951779408,
+      "fair_value": 133.21696285796364
+    },
+    "Base": {
+      "name": "Base",
+      "growth": 0.101606296016627,
+      "discount_rate": 0.09,
+      "terminal_growth": 0.025,
+      "dcf": 173.1223166036502,
+      "graham": 33.4145532833118,
+      "relative": 217.6521951779408,
+      "fair_value": 174.73699777261808
+    },
+    "Optimistic": {
+      "name": "Optimistic",
+      "growth": 0.141606296016627,
+      "discount_rate": 0.075,
+      "terminal_growth": 0.037500000000000006,
+      "dcf": 365.0146994285965,
+      "graham": 33.4145532833118,
+      "relative": 217.6521951779408,
+      "fair_value": 280.2778083263385
+    }
+  },
+  "fair_value": 174.73699777261808,
+  "market_price": 316.8299865722656,
+  "upside_pct": -44.848339747424006,
+  "margin_price": 124.91311871946215,
+  "dynamic_margin": 0.28513640321319245,
+  "assessment": "Above estimated fair value",
+  "fallback_valuation": false,
+  "fallback_reasons": [],
+  "risk_score": 25,
+  "data_quality_score": 100,
+  "business_quality_score": 100,
+  "governance_risk_score": 27,
+  "confidence_score": 74,
+  "monte_carlo_seed": 721581347476877767,
+  "monte_carlo_iterations": 2000,
+  "monte_carlo_percentiles": {
+    "P10": 138.26194040338137,
+    "P25": 153.9715446590095,
+    "P50": 175.59578338021336,
+    "P75": 202.46430724473913,
+    "P90": 233.6423909208919
+  },
+  "audit_events": [
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Identity",
+      "action": "Analysis created",
+      "details": {
+        "analysis_id": "FS-20260820-B660468ACE65",
+        "parent_analysis_id": "None",
+        "app_version": "10.1.0",
+        "model_version": "FairValueEngine 4.3",
+        "audit_schema": "1.3"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Data",
+      "action": "Source snapshot",
+      "details": {
+        "symbol": "AAPL",
+        "sources": "Yahoo Finance",
+        "source_updated": "2026-08-19",
+        "retrieved": "2026-08-20 06:41 UTC",
+        "lineage_records": "14",
+        "discrepancies": "0",
+        "external_reviews": "0",
+        "cache_status": "fresh cache",
+        "cache_age_hours": "1.7450971983538734",
+        "is_stale": "False"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Methodology",
+      "action": "Profile selected",
+      "details": {
+        "profile": "Technology operating company",
+        "primary_model": "Two-stage DCF",
+        "secondary_model": "Graham value",
+        "peer_model": "Peer P/E"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Specialized financials",
+      "action": "Financial-company metrics recorded",
+      "details": {
+        "applicable": "False",
+        "metrics": "None"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Normalization",
+      "action": "Historical inputs normalized",
+      "details": {
+        "fcf_observations": "4",
+        "revenue_observations": "4",
+        "income_observations": "4",
+        "normalized_fcf": "104195500000.0",
+        "normalized_eps": "6.742345236251711",
+        "book_value_per_share": "7.36"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Assumptions",
+      "action": "Automatic baseline recorded",
+      "details": {
+        "growth": "0.101606296016627",
+        "discount_rate": "0.09",
+        "terminal_growth": "0.025",
+        "years": "10",
+        "dcf_weight": "0.55",
+        "graham_weight": "0.1",
+        "relative_weight": "0.35",
+        "margin_of_safety": "0.2"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Assumptions",
+      "action": "Reviewed assumptions accepted",
+      "details": {
+        "preset": "Automatic defaults",
+        "override_count": "0",
+        "overrides": "{}",
+        "reviewer_note": "None",
+        "growth": "0.101606296016627",
+        "discount_rate": "0.09",
+        "terminal_growth": "0.025",
+        "years": "10",
+        "dcf_weight": "0.55",
+        "graham_weight": "0.1",
+        "relative_weight": "0.35",
+        "margin_of_safety": "0.2"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Models",
+      "action": "Base models executed",
+      "details": {
+        "primary": "173.1223166036502",
+        "graham_or_book": "33.4145532833118",
+        "peer": "217.6521951779408",
+        "blended": "174.73699777261808",
+        "excluded_models": "None",
+        "peer_symbols": "NVDA, MSFT, TSM, AVGO, SKHY, MU, AMD, ASML, ASMLF, INTC, CSCO, SSNLF",
+        "fallback_used": "False",
+        "fallback_reasons": "None"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Scenarios",
+      "action": "Scenario values calculated",
+      "details": {
+        "Conservative": "133.21696285796364",
+        "Base": "174.73699777261808",
+        "Optimistic": "280.2778083263385"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Risk",
+      "action": "Scores and valuation buffer calculated",
+      "details": {
+        "financial_risk": "25",
+        "data_quality": "100",
+        "business_quality": "100",
+        "governance_risk": "27",
+        "confidence": "74",
+        "dynamic_margin": "0.28513640321319245",
+        "model_dispersion": "1.0642050401649052"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Sensitivity",
+      "action": "Sensitivity grid calculated",
+      "details": {
+        "discount_rates": "[0.06999999999999999, 0.08, 0.09, 0.09999999999999999, 0.11]",
+        "terminal_growth_rates": "[0.015000000000000001, 0.02, 0.025, 0.030000000000000002, 0.035]",
+        "cells": "25"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Monte Carlo",
+      "action": "Simulation completed",
+      "details": {
+        "seed": "721581347476877767",
+        "requested_iterations": "2000",
+        "successful_iterations": "2000",
+        "percentiles": "{\"P10\": 138.26194040338137, \"P25\": 153.9715446590095, \"P50\": 175.59578338021336, \"P75\": 202.46430724473913, \"P90\": 233.6423909208919}",
+        "probability_fair_value_above_price": "0.017"
+      }
+    },
+    {
+      "timestamp": "2026-08-20T08:26:41.050804+00:00",
+      "stage": "Decision",
+      "action": "Final estimate recorded",
+      "details": {
+        "market_price": "316.8299865722656",
+        "fair_value": "174.73699777261808",
+        "upside_pct": "-44.848339747424006",
+        "mos_price": "124.91311871946215",
+        "assessment": "Above estimated fair value"
+      }
+    }
+  ],
+  "audit_hash": "f06ef0d810d40ea7057d8b61099cd413933e42e197fb01072c188dfe66d68403"
+}

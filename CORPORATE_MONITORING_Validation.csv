@@ -1,0 +1,4 @@
+Date,Severity,Symbol,Type,Source,Title,Read,Validation
+2026-08-10,HIGH,AAPL,8-K,SEC EDGAR,Current report — material agreement,No,Mocked SEC parser and persistence test
+2026-08-08,INFO,AAPL,Dividend,Yahoo Finance,Dividend 0.26 per share,No,Corporate-action event format
+2026-08-12,WARNING,HDFCBANK,Announcement,NSE India,Board meeting and results announcement,No,Indian announcement event format

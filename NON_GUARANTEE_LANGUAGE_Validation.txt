@@ -1,0 +1,19 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+Uncertainty-first language validation — Version 10.1
+Date: 20 August 2026
+
+Dashboard no Buy/Sell recommendation banner: passed
+Valuation-buffer loss-protection disclaimer: passed
+Assessment labels contain no Safe/Guaranteed/Buy labels: passed
+Watchlist buffer alert disclaimer: passed
+Risk & sensitivity navigation terminology: passed
+Balance-sheet/governance resilience terminology: passed
+Assumption review buffer terminology: passed
+Batch CSV/PDF buffer terminology: passed
+Colour watchlist PDF buffer terminology: passed
+Detailed PDF cover warning: passed
+Detailed PDF contains no 'MOS PRICE' label: passed
+PDF contents/bookmarks: passed
+Offline tests passed: 88
+Optional live tests skipped: 3
+Core coverage: 77.82%

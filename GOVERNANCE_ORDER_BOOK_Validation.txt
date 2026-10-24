@@ -1,0 +1,20 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE v10.3.0
+FairValueEngine 4.4 • Audit schema 1.4
+Governance/order-book/promoter integration validation
+Date: 2026-09-01
+
+VALIDATED RULES
+- Governance risk above 35/100 adds a bounded 0–2.0 percentage-point automatic discount-rate premium.
+- Approximately three-year promoter-holding increase/stability/decrease changes governance risk asymmetrically.
+- Verified order book is divided by latest annual revenue to calculate coverage and a 0–100 score.
+- Order-book adjustment to initial growth is bounded to +1.5 / -1.0 percentage points.
+- Missing order-book data is neutral.
+- Weak verified order-book coverage can increase the valuation buffer by up to 2 points.
+- Order-book/promoter data, scores, assumptions and transformations enter lineage/audit output.
+- External review requires a citation URL and period.
+
+AUTOMATED REGRESSION
+A paired-company test verifies that stronger order-book coverage and improving promoter holding produce a higher order-book score, lower governance risk, lower required return and higher modeled fair value than weak coverage, declining promoter holding and elevated audit/board risk, with all other fundamentals held equal.
+
+CAUTION
+Order book is not guaranteed revenue, and promoter ownership is not proof of governance quality. Verify official filings, executable order scope, margins, timing, cancellations, pledging, dilution and corporate actions. Valuation buffers do not guarantee protection from loss.

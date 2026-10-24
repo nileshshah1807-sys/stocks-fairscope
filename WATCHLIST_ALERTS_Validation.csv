@@ -1,0 +1,3 @@
+Symbol,Market,Company,Custom Price,Min Upside %,Max Financial Risk,Max Governance Risk,Fair Value Change %,Alert Valuation Buffer,Last Price,Last Fair Value,Last Checked,Status
+AAPL,US,Apple Inc.,1000.0,0.0,60.0,60.0,10.0,True,309.9200134277344,175.167589560317,2026-08-18T16:33:34.299517+00:00,Above estimated fair value
+MSFT,US,Microsoft Corporation,1000.0,0.0,60.0,60.0,10.0,True,482.5299987792969,339.5973511299921,2026-08-18T16:33:34.300193+00:00,Above estimated fair value

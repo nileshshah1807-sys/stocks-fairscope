@@ -1,0 +1,24 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+END-USER LICENSE AND EDUCATIONAL-USE NOTICE
+Version 10.4.0 — 1 September 2026
+
+1. PURPOSE
+This software is an educational and research tool for estimating stock fair value and valuation uncertainty. It does not provide personalized investment advice, a recommendation, an offer, or a guarantee of returns.
+
+2. DATA
+The software uses free third-party website data, including Yahoo Finance and best-effort Indian-market verification. Data may be delayed, incomplete, inaccurate, rate-limited, blocked, restated, or changed without notice. Users must verify critical figures against official SEC, NSE, BSE, and company filings.
+
+3. NO WARRANTY
+The software is provided “as is” without warranties of accuracy, availability, fitness for a particular purpose, merchantability, or non-infringement, to the extent permitted by law.
+
+4. INVESTMENT RISK
+No valuation model makes investing safe. Users are solely responsible for investment decisions and should consult an appropriately registered financial professional.
+
+5. THIRD-PARTY TERMS
+Users are responsible for complying with the terms, licenses, and access policies of third-party data sources and software dependencies.
+
+6. LIMITATION OF LIABILITY
+To the maximum extent permitted by law, the publisher and contributors are not liable for trading losses, lost profits, data errors, service interruption, or indirect or consequential damages arising from use of the software.
+
+7. ACCEPTANCE
+Installing or using the software indicates acceptance of this notice.

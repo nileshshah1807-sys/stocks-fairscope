@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.build-venv/
+
+# Builds
+build/
+dist/
+installer_output/
+*.spec.bak
+
+# Signing secrets — never commit
+*.pfx
+*.p12
+*.pvk
+*.key
+*.cer
+*.crt
+signing-secrets/
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Hugging Face Space bundle (generated)
+space_build/
+
+# Test coverage data (contains local paths)
+.coverage
+coverage.xml

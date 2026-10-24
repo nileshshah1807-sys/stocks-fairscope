@@ -1,0 +1,20 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+Error monitoring and diagnostics validation — Version 9.8
+Date: 20 August 2026
+
+Structured JSONL logging: passed
+Log rotation: implemented (5 MB, 4 backups)
+Email/token/password redaction: passed
+Error count and recent-event retrieval: passed
+Yahoo/Screener/NSE/BSE health checks: passed with mocked responses
+SQLite quick_check: passed
+REINDEX/VACUUM maintenance: passed
+Diagnostic ZIP creation: passed
+Support ZIP privacy exclusion: passed (no .db files)
+Global exception hook: implemented
+Qt diagnostics workspace: passed
+Colour watchlist PDF parsing: passed
+Dependency audit: no known vulnerabilities found
+Offline tests passed: 88
+Optional network tests skipped: 3
+Core coverage: 77.82%

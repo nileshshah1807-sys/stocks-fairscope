@@ -1,0 +1,14 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+Local database and cache validation — Version 9.5
+
+Network fetch: AAPL → cache_status=network
+Immediate repeat: AAPL → cache_status=fresh cache
+Price matched cached snapshot: true
+SQLite stock serialization: passed
+Lineage serialization: passed
+Specialized financial metrics serialization: passed
+Stale fallback: passed
+TTL settings: passed
+Valuation audit-history save/export: passed
+Clear-expired/cache/history isolation: passed
+Thread-safe WAL mode: enabled

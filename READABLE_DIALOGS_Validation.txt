@@ -1,0 +1,21 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE v10.2.0
+Readable notification dialog validation
+Date: 2026-08-20
+
+FIX
+- Replaced native one-way Qt message boxes with AccessibleMessageDialog.
+- Forced white message background and #14243A dark text.
+- Added distinct information/success/warning/error palettes.
+- Added selectable, wrapped message text.
+- Added Open folder for existing saved-file paths.
+- Watchlist PDF save confirmation now uses the green success variant.
+
+REGRESSION COVERAGE
+- Explicit foreground/background colour rules
+- Success palette
+- Complete file-path text
+- Mouse-selectable message body
+- Existing watchlist alert-card contrast
+
+LIMITATION
+- Windows title-bar colour is controlled by the operating system, but all user-readable dialog content is now app-rendered with explicit high-contrast colours.

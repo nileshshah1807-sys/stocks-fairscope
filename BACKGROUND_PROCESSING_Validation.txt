@@ -1,0 +1,19 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+Background processing validation — Version 9.6
+
+Bounded worker range: 1–6
+Default workers: 3
+Determinate progress: passed
+Pause/resume checkpoint: passed
+Cancel before start: passed
+Cancel queued work: implemented
+Transient retry: passed after two simulated 429 failures
+Backoff: exponential with jitter
+Permanent-error immediate failure: implemented
+Partial SQLite progress: passed
+Interrupted-job marking: passed
+Recoverable payload: passed
+Fresh-cache reuse: passed
+Force-refresh option: passed
+Stale fallback after source failure: passed
+Progress reset after completion: passed

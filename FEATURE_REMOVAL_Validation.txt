@@ -1,0 +1,12 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE v10.4.0
+Portfolio/transaction feature removal validation
+Date: 2026-09-01
+
+- Sidebar workspaces reduced from 18 to 16.
+- Portfolio Risk option removed.
+- Transactions & Performance option removed.
+- Batch analysis no longer calculates or exports portfolio analytics.
+- Batch template now contains only Symbol and Market.
+- Portfolio/transaction modules, reports, templates, previews and dedicated tests removed.
+- Privacy wording now applies to watchlist values.
+- Remaining valuation, watchlist, filing, database, diagnostic and report workflows retained.

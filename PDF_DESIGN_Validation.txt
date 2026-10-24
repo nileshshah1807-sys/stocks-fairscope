@@ -1,0 +1,20 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+PDF design validation — Version 10.0
+Date: 20 August 2026
+
+Branded cover page: passed
+Executive summary: passed
+Contents page: passed
+Clickable PDF outline/bookmarks: passed (more than 5 entries)
+Running header/footer: passed
+Analysis ID/model/audit metadata: passed
+Valuation cards and assessment panel: passed
+Price/model/score/sensitivity/Monte Carlo vector graphics: passed
+Assumption override disclosure: passed
+Specialized financial-company section: passed
+External review citations: passed
+Model audit table: passed
+Clickable data-lineage appendix: passed
+PDF metadata: populated
+Detailed PDF parse/readability: passed
+Batch/performance/watchlist PDFs: passed

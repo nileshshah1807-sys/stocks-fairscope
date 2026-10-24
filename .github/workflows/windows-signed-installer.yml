@@ -1,0 +1,120 @@
+name: Windows signed installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      require_signature:
+        description: Fail unless Authenticode signing succeeds
+        required: true
+        default: true
+        type: boolean
+      publish_release:
+        description: Publish the installer as a GitHub Release (tag v<APP_VERSION>)
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    env:
+      CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+      CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+
+      - name: Prepare signing certificate
+        if: ${{ env.CERTIFICATE_BASE64 != '' }}
+        shell: powershell
+        run: |
+          $bytes=[Convert]::FromBase64String($env:CERTIFICATE_BASE64)
+          $path=Join-Path $env:RUNNER_TEMP "fairscope-signing.pfx"
+          [IO.File]::WriteAllBytes($path,$bytes)
+          "FAIRSCOPE_SIGNING_PFX=$path" | Out-File $env:GITHUB_ENV -Append
+          "FAIRSCOPE_SIGNING_PASSWORD=$env:CERTIFICATE_PASSWORD" | Out-File $env:GITHUB_ENV -Append
+
+      - name: Build and sign
+        shell: powershell
+        run: |
+          $args=@("-Python","py")
+          if ("${{ inputs.require_signature }}" -eq "true") { $args += "-RequireSignature" }
+          & .\packaging\windows\build_windows.ps1 @args
+
+      - name: Verify trusted signature
+        if: ${{ inputs.require_signature }}
+        shell: powershell
+        run: .\packaging\windows\verify_installer.ps1 .\installer_output\Dr_Nilesh_Shah_Stocks_FairScope_Setup_x64_v10.4.1.exe
+
+      - name: Installer smoke test
+        shell: powershell
+        run: |
+          $installer=".\installer_output\Dr_Nilesh_Shah_Stocks_FairScope_Setup_x64_v10.4.1.exe"
+          if ("${{ inputs.require_signature }}" -eq "true") {
+            .\packaging\windows\test_installer.ps1 $installer -RequireSignature
+          } else {
+            .\packaging\windows\test_installer.ps1 $installer
+          }
+
+      - name: Remove certificate material
+        if: always()
+        shell: powershell
+        run: |
+          if ($env:FAIRSCOPE_SIGNING_PFX -and (Test-Path $env:FAIRSCOPE_SIGNING_PFX)) {
+            Remove-Item $env:FAIRSCOPE_SIGNING_PFX -Force
+          }
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dr-Nilesh-Shah-Stocks-FairScope-Windows-x64-v10.4.1
+          path: |
+            installer_output/*.exe
+            installer_output/*.sha256
+            installer_output/build-manifest.json
+          if-no-files-found: error
+
+  # Separate job so only this short step holds write access; the build job (which installs third-party packages) stays read-only.
+  publish-release:
+    needs: build-windows-x64
+    if: ${{ inputs.publish_release }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download installer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Dr-Nilesh-Shah-Stocks-FairScope-Windows-x64-*
+          merge-multiple: true
+          path: release
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 -c "from version import APP_VERSION; print(APP_VERSION)")
+          if [ "${{ inputs.require_signature }}" = "true" ]; then signing="Authenticode-signed installer."; else signing="Unsigned installer: Windows SmartScreen will warn about an unknown publisher (More info → Run anyway)."; fi
+          sha=$(cat release/*.sha256)
+          notes="Windows x64 installer for DR. NILESH SHAH - STOCKS FAIRSCOPE v${version}. ${signing}
+
+          SHA-256: ${sha}
+
+          Educational research tool only. Not investment advice."
+          # Fails instead of overwriting when the tag already exists; bump APP_VERSION for a new release.
+          gh release create "v${version}" release/* --title "Stocks FairScope v${version}" --notes "${notes}" --target "${GITHUB_SHA}"

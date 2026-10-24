@@ -1,0 +1,23 @@
+DR. NILESH SHAH - STOCKS FAIRSCOPE
+Automated testing validation — Version 9.7
+Date: 19 August 2026
+
+Offline tests passed: 88
+Optional live-network tests skipped by default: 3
+Total collected tests: 91
+Core branch coverage: 77.82%
+Required minimum coverage: 55%
+Ruff static checks: passed
+Python compile-all: passed
+pip dependency consistency: passed
+pip-audit known-vulnerability scan: no known vulnerabilities found
+PDF detailed/batch/performance parsing: passed
+CSV/XLSX imports: passed
+Extreme inputs: passed
+100-stock offline stress batch: passed
+Qt workspaces: passed
+Cache/stale/recovery: passed
+Background retry/pause/cancel: passed
+Watchlists/alerts: passed
+Corporate monitor parsers: passed
+Windows packaging metadata: passed
