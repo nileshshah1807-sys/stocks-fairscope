@@ -11,8 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
-# The Streamlit page and every app module it imports (directly or through data_provider / pdf_report).
-MODULES = ["streamlit_app.py", "data_provider.py", "sec_facts.py", "fundamentals.py", "india_sources.py", "local_database.py",
+# Every app module the Streamlit page (web/streamlit_app.py) imports, directly or through data_provider / pdf_report.
+MODULES = ["background_processing.py", "batch_import.py", "data_provider.py", "sec_facts.py", "fundamentals.py", "india_sources.py", "local_database.py",
            "logger.py", "secure_storage.py", "ttl_cache.py", "valuation.py", "version.py", "pdf_report.py"]
 
 
@@ -25,7 +25,8 @@ def build(target: Path = ROOT / "space_build") -> Path:
     for name in MODULES:
         shutil.copy2(ROOT / name, target / name)
     shutil.copy2(ROOT / "assets" / "logo_256.png", target / "assets" / "logo_256.png")
-    shutil.copy2(ROOT / "requirements-web.txt", target / "requirements.txt")
+    shutil.copy2(ROOT / "web" / "streamlit_app.py", target / "streamlit_app.py")
+    shutil.copy2(ROOT / "web" / "requirements.txt", target / "requirements.txt")
     for name in ("Dockerfile", "README.md"):
         shutil.copy2(HERE / name, target / name)
     return target

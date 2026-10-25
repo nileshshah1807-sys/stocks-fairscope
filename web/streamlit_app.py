@@ -2,14 +2,21 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from data_provider import DataProviderError, fetch_stock
+# The engine lives in the repository root; this page sits in web/ so Streamlit Cloud installs web/requirements.txt, not the desktop list.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from background_processing import JobControl, analyze_with_retry
+from batch_import import BatchItem
+from data_provider import DataProviderError
 from pdf_report import create_pdf
-from valuation import ValuationResult, value_stock
+from valuation import ValuationResult
 from version import APP_VERSION, MODEL_VERSION
 
 st.set_page_config(page_title="Stocks FairScope", layout="wide")
@@ -17,8 +24,12 @@ st.set_page_config(page_title="Stocks FairScope", layout="wide")
 
 @st.cache_data(ttl=3600, show_spinner=False, max_entries=200)
 def analyze(symbol: str, market: str) -> ValuationResult:
-    # One hour of caching per ticker keeps repeat visits from re-querying Yahoo, which rate-limits shared cloud addresses.
-    return value_stock(fetch_stock(symbol, market))
+    # One hour of caching per ticker keeps repeat visits from re-querying Yahoo, which rate-limits shared cloud addresses;
+    # the desktop batch retry backs off on rate limits. Raised errors are not cached, so the next click tries again.
+    outcome = analyze_with_retry(0, BatchItem(symbol, market), JobControl(), retries=3)
+    if outcome.result is None:
+        raise DataProviderError(outcome.error or f"Could not value {symbol}.")
+    return outcome.result
 
 
 def money(value, currency):
