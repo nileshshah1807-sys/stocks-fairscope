@@ -83,6 +83,7 @@ from valuation import (
     FinancialCompanyMetrics,
     ValuationResult,
     audit_record,
+    dcf_tables,
     value_stock,
     verify_audit_hash,
 )
@@ -462,6 +463,8 @@ class FairScopeWindow(QMainWindow):
         for c in self.forensic_metrics:
             forensic.addWidget(c)
         l.addLayout(forensic)
+        dcf_split=QSplitter();fcard=Card();fl=QVBoxLayout(fcard);fl.addWidget(QLabel("Free-cash-flow forecast (base case)"));self.dcf_forecast=QTableWidget(0,7);self._setup_table(self.dcf_forecast);fl.addWidget(self.dcf_forecast);dcf_split.addWidget(fcard)
+        bcard=Card();bl=QVBoxLayout(bcard);bl.addWidget(QLabel("DCF value bridge"));self.dcf_bridge=QTableWidget(0,2);self._setup_table(self.dcf_bridge);self.dcf_bridge.setHorizontalHeaderLabels(["Step","Amount"]);bl.addWidget(self.dcf_bridge);dcf_split.addWidget(bcard);dcf_split.setSizes([700,450]);l.addWidget(dcf_split,1)
         split=QSplitter();card=Card();cl=QVBoxLayout(card);cl.addWidget(QLabel("Fair-value sensitivity: discount rate × terminal growth"));legend=QLabel("Green: above price  •  Amber: near price  •  Red: below price  •  Bold: base assumptions");legend.setObjectName("pageSub");cl.addWidget(legend);self.sensitivity=QTableWidget(0,6);self._setup_table(self.sensitivity);cl.addWidget(self.sensitivity);split.addWidget(card);notes=Card();nl=QVBoxLayout(notes);nl.addWidget(QLabel("Quality, governance & confidence notes"));self.safety_notes=QTextEdit();self.safety_notes.setReadOnly(True);nl.addWidget(self.safety_notes);split.addWidget(notes);split.setSizes([650,500]);l.addWidget(split,1);return page
     def _monte_carlo_page(self):
         page,l=self._page("Monte Carlo valuation","Two thousand reproducible simulations describe model uncertainty; they do not predict returns or guarantee profit.")
@@ -662,6 +665,10 @@ class FairScopeWindow(QMainWindow):
                     item.setBackground(QBrush(QColor(color)));item.setToolTip(f"Fair value {money(value,d.currency)} • {((value/d.price)-1):+.1%} vs market")
                     if i==2 and j==3:
                         font=item.font();font.setBold(True);item.setFont(font);item.setToolTip(item.toolTip()+" • Base assumptions")
+        header,forecast,bridge=dcf_tables(r);self.dcf_forecast.setRowCount(0);self.dcf_bridge.setRowCount(0)
+        self.dcf_forecast.setHorizontalHeaderLabels(header or ["Year","Growth","Revenue","NOPAT","Reinvestment","FCFF","PV of FCFF"])
+        for i,values in enumerate(forecast or [["DCF not used for this stock"]+[""]*6]):self._set_row(self.dcf_forecast,i,values)
+        for i,values in enumerate(bridge):self._set_row(self.dcf_bridge,i,values)
         notes=[r.reverse_dcf_note,"",f"Business quality ({r.business_quality_score}/100):"]+["• "+x for x in (r.business_quality_flags or ["No material automated flags."])]+["",f"Governance risk ({r.governance_risk_score}/100; lower is better):"]+["• "+x for x in (r.governance_flags or ["No material automated flags."])]+["",f"Order book ({r.order_book_score}/100; neutral when unavailable):"]+["• "+x for x in r.order_book_flags]+self.engine_notes(r);self.safety_notes.setPlainText("\n".join(notes));self.render_forensic_metrics(r)
         mc=r.monte_carlo_percentiles;mvals=[money(mc.get("P10"),d.currency) if mc else "—",money(mc.get("P50"),d.currency) if mc else "—",money(mc.get("P90"),d.currency) if mc else "—",f"{r.monte_carlo_probability_above_price:.1%}" if r.monte_carlo_probability_above_price is not None else "—",f"{r.monte_carlo_iterations:,}"]
         for card,value in zip(self.mc_metrics,mvals):

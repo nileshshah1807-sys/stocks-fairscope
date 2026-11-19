@@ -16,7 +16,7 @@ from background_processing import JobControl, analyze_with_retry
 from batch_import import BatchItem
 from data_provider import DataProviderError
 from pdf_report import create_pdf
-from valuation import ValuationResult
+from valuation import ValuationResult, dcf_tables
 from version import APP_VERSION, MODEL_VERSION
 
 st.set_page_config(page_title="Stocks FairScope", layout="wide")
@@ -102,6 +102,24 @@ if result:
             st.dataframe(pd.DataFrame([{key: money(value, currency) for key, value in percentiles.items()}]), hide_index=True, width="stretch")
             if result.monte_carlo_probability_above_price is not None:
                 st.caption(f"{result.monte_carlo_probability_above_price:.0%} of simulations put fair value above today's price. Model uncertainty, not a return forecast.")
+
+    header, forecast, bridge = dcf_tables(result)
+    if forecast:
+        st.markdown("**Free-cash-flow forecast (base case)**")
+        st.dataframe(pd.DataFrame(forecast, columns=header), hide_index=True, width="stretch")
+        st.caption("NOPAT is after-tax operating profit; reinvestment is the part kept to fund growth; FCFF is the free cash flow left for all investors.")
+    bridge_column, sensitivity_column = st.columns(2)
+    if bridge:
+        bridge_column.markdown("**DCF value bridge**")
+        bridge_column.dataframe(pd.DataFrame(bridge, columns=["Step", "Amount"]), hide_index=True, width="stretch")
+        bridge_column.caption("Primary model only; the headline fair value also weighs the other models and scenarios.")
+    if result.sensitivity_values:
+        sensitivity_column.markdown("**Fair-value sensitivity: discount rate × terminal growth**")
+        sensitivity_column.dataframe(pd.DataFrame([[money(value, currency) for value in row] for row in result.sensitivity_values],
+                                                  index=[f"{rate:.1%}" for rate in result.sensitivity_discount_rates],
+                                                  columns=[f"TG {growth:.1%}" for growth in result.sensitivity_terminal_growths]), width="stretch")
+        if result.terminal_value_share is not None:
+            sensitivity_column.caption(f"Terminal value is {result.terminal_value_share:.0%} of the primary model's value. Middle cell = base assumptions.")
 
     with st.expander("How the estimate was built"):
         for note in result.model_notes:

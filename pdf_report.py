@@ -5,7 +5,7 @@ import html
 import os
 from datetime import datetime
 
-from valuation import ValuationResult, verify_audit_hash
+from valuation import ValuationResult, dcf_tables, verify_audit_hash
 
 
 def _money(value, currency: str) -> str:
@@ -259,6 +259,14 @@ def create_pdf(result: ValuationResult, output_path: str) -> None:
     if forensic.get("promoter_pledge") is not None:forensic_rows.append(("Promoter pledge",f"{forensic['promoter_pledge']:.1%} of promoter holding"))
     if forensic.get("effective_tax_rate") is not None:forensic_rows.append(("Effective tax rate",f"{forensic['effective_tax_rate']:.1%}"))
     if forensic_rows:story += [Paragraph("Quality & forensic screens",styles["H2X"]),key_value_table(forensic_rows),Paragraph("Forensic scores are statistical screens, not findings of misstatement. Piotroski and Altman scores feed financial risk; Beneish M-score and promoter pledge feed governance risk; ROIC, ROCE, margin stability, and the cash cycle feed business quality.",styles["Small"])]
+
+    forecast_header,forecast_rows,bridge_rows=dcf_tables(result)
+    if forecast_rows:
+        story += [Paragraph("Free-cash-flow forecast (base case)",styles["H2X"])]
+        ft=Table([forecast_header]+forecast_rows,colWidths=[18*mm,16*mm]+[27.6*mm]*5,repeatRows=1)
+        ft.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),navy),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONT",(0,0),(-1,0),"Helvetica-Bold",6.8),("FONT",(0,1),(-1,-1),"Helvetica",7.2),("ALIGN",(1,0),(-1,-1),"RIGHT"),("GRID",(0,0),(-1,-1),.35,colors.HexColor("#C9D3DF")),("TOPPADDING",(0,0),(-1,-1),3),("BOTTOMPADDING",(0,0),(-1,-1),3)]))
+        story += [ft,Paragraph("NOPAT is after-tax operating profit; reinvestment is the part kept to fund growth; FCFF (free cash flow to the firm) is NOPAT minus reinvestment. Growth fades to terminal growth after the high-growth stage.",styles["Small"]),
+                  Paragraph("DCF value bridge",styles["H2X"]),key_value_table(bridge_rows),Paragraph("The DCF value per share is the primary model only; the headline fair value also weighs the secondary and relative models across three scenarios.",styles["Small"])]
 
     if result.sensitivity_values:
         story += [Paragraph("Fair-value sensitivity",styles["H2X"])]

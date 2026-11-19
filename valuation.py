@@ -294,6 +294,39 @@ class ValuationResult:
     monte_carlo_spreads: dict = field(default_factory=dict)
     implied_return: Optional[float] = None  # annual shareholder return implied by today's price (primary model)
     implied_return_note: str = ""
+    dcf_forecast: list[dict] = field(default_factory=list)  # base-case FCFF forecast by year (empty when the primary model is not the FCFF DCF)
+    dcf_bridge: dict = field(default_factory=dict)  # PV of forecast + PV of terminal = EV; EV - net claims = equity; ÷ shares
+
+
+def money_scale(currency: str) -> tuple[float, str]:
+    """Divisor and label for statement-size amounts: crore for rupees, millions otherwise."""
+    return (1e7, "Cr") if currency == "INR" else (1e6, "M")
+
+
+def dcf_tables(result: "ValuationResult") -> tuple[list[str], list[list[str]], list[tuple[str, str]]]:
+    """Display strings shared by the desktop app, PDF, and web page: forecast header, forecast rows, value-bridge rows."""
+    bridge, currency = result.dcf_bridge, result.data.currency
+    if not (result.dcf_forecast and bridge):
+        return [], [], []
+    divisor, unit = money_scale(currency)
+    def amount(value):
+        return "—" if value is None else f"{value / divisor:,.0f}"
+    header = ["Year", "Growth", f"Revenue ({unit})", f"NOPAT ({unit})", f"Reinvestment ({unit})", f"FCFF ({unit})", f"PV of FCFF ({unit})"]
+    rows = [[f"Year {row['year']}", f"{row['growth']:.1%}", amount(row["revenue"]), amount(row["nopat"]), amount(row["reinvestment"]), amount(row["fcff"]), amount(row["present_value"])]
+            for row in result.dcf_forecast]
+    claims, years = bridge["net_claims"], bridge["years"]
+    per_share, price = bridge["per_share"], result.data.price
+    lines = [(f"PV of free cash flow, years 1–{years}", f"{currency} {amount(bridge['pv_forecast'])} {unit}"),
+             (f"Terminal value at year {years} (growth {bridge['terminal_growth']:.1%}, discount {bridge['discount_rate']:.1%})", f"{currency} {amount(bridge['terminal_value'])} {unit}"),
+             ("PV of terminal value", f"{currency} {amount(bridge['pv_terminal'])} {unit} ({bridge['terminal_share']:.0%} of enterprise value)"),
+             ("Enterprise value", f"{currency} {amount(bridge['enterprise_value'])} {unit}"),
+             ("Less net debt and other claims" if claims >= 0 else "Plus net cash and investments", f"{currency} {amount(abs(claims))} {unit}"),
+             ("Equity value", f"{currency} {amount(bridge['equity_value'])} {unit}"),
+             ("Shares outstanding", f"{amount(bridge['shares'])} {unit}"),
+             ("DCF value per share (base case)", f"{currency} {per_share:,.2f}")]
+    if _valid_positive(price):
+        lines += [("Current market price", f"{currency} {price:,.2f}"), ("Upside / downside vs DCF", f"{(per_share / price - 1):+.1%}")]
+    return header, rows, lines
 
 
 def _valid_positive(value: Optional[float]) -> bool:
@@ -952,10 +985,11 @@ def _terminal_return(drivers: Drivers, rate: float) -> float:
     return min(.30, max(rate, rate + .5 * (drivers.roic - rate)))
 
 
-def enterprise_dcf(data: StockData, a: Assumptions, drivers: Drivers) -> tuple[Optional[float], Optional[float]]:
+def enterprise_dcf(data: StockData, a: Assumptions, drivers: Drivers, detail: Optional[dict] = None) -> tuple[Optional[float], Optional[float]]:
     """FCFF DCF at WACC; the terminal value pays for its own growth (g / RONIC reinvestment); equity = EV - net claims.
 
-    Returns (value per share, terminal value share of enterprise value).
+    Returns (value per share, terminal value share of enterprise value). A passed `detail` dict receives the
+    year-by-year forecast ("rows") and the enterprise-to-equity bridge ("bridge") for display.
     """
     rate, g = a.discount_rate, a.terminal_growth
     convergence = drivers.basis == "Revenue DCF (margin convergence)"
@@ -963,12 +997,15 @@ def enterprise_dcf(data: StockData, a: Assumptions, drivers: Drivers) -> tuple[O
         return None, None
     if not convergence and not (drivers.basis == "FCFF" and drivers.fcff_margin and drivers.fcff_margin > 0):
         return None, None
-    revenue, pv, fcff = drivers.revenue, 0.0, 0.0
+    revenue, pv, fcff, rows = drivers.revenue, 0.0, 0.0, []
     for year, year_growth in _growth_path(a):
         revenue *= 1 + year_growth
         margin = drivers.current_margin + (drivers.target_margin - drivers.current_margin) * min(1.0, year / a.years) if convergence else drivers.fcff_margin
         fcff = revenue * margin
         pv += fcff / ((1 + rate) ** year)
+        nopat = revenue * drivers.nopat_margin if not convergence and drivers.nopat_margin else None
+        rows.append({"year": year, "growth": year_growth, "revenue": revenue, "nopat": nopat, "reinvestment": None if nopat is None else nopat - fcff,
+                     "fcff": fcff, "present_value": fcff / ((1 + rate) ** year)})
     if convergence:
         terminal = revenue * (1 + g) * drivers.target_margin / (rate - g)
     elif drivers.nopat_margin and drivers.nopat_margin > 0:
@@ -981,6 +1018,11 @@ def enterprise_dcf(data: StockData, a: Assumptions, drivers: Drivers) -> tuple[O
     per_share = (enterprise - drivers.net_claims) / drivers.shares
     if enterprise <= 0 or not _valid_positive(per_share):
         return None, None
+    if detail is not None:
+        detail["rows"] = rows
+        detail["bridge"] = {"pv_forecast": pv, "terminal_value": terminal, "pv_terminal": terminal_pv, "enterprise_value": enterprise, "net_claims": drivers.net_claims,
+                            "equity_value": enterprise - drivers.net_claims, "shares": drivers.shares, "per_share": per_share, "years": a.years,
+                            "discount_rate": rate, "terminal_growth": g, "terminal_share": terminal_pv / enterprise}
     return per_share, terminal_pv / enterprise
 
 
@@ -1356,6 +1398,8 @@ def value_stock(data: StockData, assumptions: Optional[Assumptions] = None, auto
     if implied_growth is not None and history_growth is not None:reverse_note+=f" For comparison, revenue grew {history_growth:.1%} a year over the reported history."
     shareholder_return,return_note=implied_return(data,base,profile,context)
     sensitivity_rates,sensitivity_terms,sensitivity_values=sensitivity_table(data,base,profile,context)
+    dcf_detail:dict={}
+    if profile!="Financial institution" and context.drivers.basis!="Equity FCF":enterprise_dcf(data,base,context.drivers,dcf_detail)
     spreads=monte_carlo_spreads(data,base,context)
     mc_percentiles,mc_probability,mc_std,mc_edges,mc_counts,mc_iterations,mc_seed=monte_carlo_valuation(data,base,profile,context,monte_carlo_iterations,spreads)
     growth_parts=growth_components(data,context);forensic=forensic_summary(data,context)
@@ -1424,7 +1468,8 @@ def value_stock(data: StockData, assumptions: Optional[Assumptions] = None, auto
         automatic_assumptions=automatic,manual_overrides=manual_overrides,assumption_note=assumption_note.strip(),assumption_preset=assumption_preset,
         analysis_id=analysis_id,parent_analysis_id=parent_analysis_id,created_at=created_at,app_version=APP_VERSION,model_version=MODEL_VERSION,audit_schema_version=AUDIT_SCHEMA_VERSION,monte_carlo_seed=mc_seed,audit_events=events,fallback_valuation=fallback_used,fallback_reasons=fallback_reasons,
         base_fair_value=base_fair,scenario_weights=scenario_weights,cost_of_capital=asdict(capital),valuation_drivers=asdict(drivers),relative_components=dict(context.relative_components),
-        growth_components=growth_parts,terminal_value_share=terminal_share,forensic_scores=forensic,monte_carlo_spreads=spreads,implied_return=shareholder_return,implied_return_note=return_note)
+        growth_components=growth_parts,terminal_value_share=terminal_share,forensic_scores=forensic,monte_carlo_spreads=spreads,implied_return=shareholder_return,implied_return_note=return_note,
+        dcf_forecast=dcf_detail.get("rows",[]),dcf_bridge=dcf_detail.get("bridge",{}))
     result_obj.audit_hash=compute_audit_hash(result_obj)
     return result_obj
 

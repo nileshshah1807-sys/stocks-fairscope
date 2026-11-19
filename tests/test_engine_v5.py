@@ -11,7 +11,7 @@ import data_provider
 import india_sources
 from fundamentals import altman_z_score, beneish_m_score, level_adjusted_long_median, normalized_cash_flows, piotroski_f_score
 from local_database import LocalDatabase
-from valuation import Assumptions, StockData, build_context, cost_of_capital, default_assumptions, relative_valuation, reverse_dcf, value_stock, verify_audit_hash
+from valuation import Assumptions, StockData, build_context, cost_of_capital, dcf_tables, default_assumptions, relative_valuation, reverse_dcf, value_stock, verify_audit_hash
 
 YEARS=["2025-12-31","2024-12-31","2023-12-31","2022-12-31"]
 STATEMENTS={"revenue":[1000,900,810,730],"ebit":[250,220,190,170],"ebitda":[290,256,223,200],"depreciation":[40,36,33,30],"capital_expenditure":[-50,-45,-40,-36],"working_capital_change":[-10,-8,-7,-6],
@@ -55,6 +55,15 @@ class OperatingModelTests(unittest.TestCase):
         plain=value_stock(compounder(),monte_carlo_iterations=0).scenarios["Base"].dcf
         self.assertAlmostEqual(value_stock(compounder(minority_interest=500),monte_carlo_iterations=0).scenarios["Base"].dcf,plain-5,places=6)
         self.assertAlmostEqual(value_stock(compounder(listed_investments_value=1000,holding_discount=.2),monte_carlo_iterations=0).scenarios["Base"].dcf,plain+8,places=6)
+    def test_forecast_table_and_bridge_add_up_to_the_dcf_value(self):
+        result=value_stock(compounder(),monte_carlo_iterations=0);bridge=result.dcf_bridge;rows=result.dcf_forecast
+        self.assertEqual(len(rows),result.base_assumptions.years)
+        self.assertAlmostEqual(sum(row["present_value"] for row in rows),bridge["pv_forecast"],places=4)
+        self.assertAlmostEqual(bridge["pv_forecast"]+bridge["pv_terminal"],bridge["enterprise_value"],places=4)
+        self.assertAlmostEqual((bridge["enterprise_value"]-bridge["net_claims"])/bridge["shares"],result.scenarios["Base"].dcf,places=6)
+        self.assertAlmostEqual(bridge["terminal_share"],result.terminal_value_share,places=9)
+        for row in rows:self.assertAlmostEqual(row["nopat"]-row["reinvestment"],row["fcff"],places=4)
+        header,table,lines=dcf_tables(result);self.assertEqual(len(header),len(table[0]));self.assertTrue(lines[-1][1].endswith("%"))
     def test_high_roic_compounder_gets_longer_growth_stage_and_blended_growth(self):
         data=compounder(analyst_growth=.12);automatic=default_assumptions(data);context=build_context(data)
         self.assertEqual(automatic.high_growth_years,10);self.assertEqual(automatic.years,15)
