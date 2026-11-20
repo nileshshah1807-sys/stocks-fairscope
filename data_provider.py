@@ -44,6 +44,13 @@ def _optional(fetch):
         if is_transient_error(str(exc)):raise
         return None
 
+def _search_profile(yf,symbol:str)->dict:
+    """Name, sector and industry from Yahoo's search endpoint, which still answers on shared cloud addresses when the profile request is refused."""
+    try:quotes=yf.Search(symbol,max_results=5,news_count=0,lists_count=0).quotes or []
+    except Exception:return {}
+    match=next((quote for quote in quotes if str(quote.get("symbol","")).upper()==symbol.upper()),{})
+    return {key:match[source] for key,source in (("longName","longname"),("shortName","shortname"),("sector","sector"),("industry","industry")) if match.get(source)}
+
 def normalize_symbol(raw:str,market:str)->str:
     symbol=raw.strip().upper().replace(" ","")
     if not symbol:raise DataProviderError("Enter a ticker symbol.")
@@ -346,7 +353,9 @@ def _fetch_stock(symbol:str,market:str,database,force_refresh:bool,allow_stale:O
         if not price or price<=0:raise DataProviderError(f"No valid latest price found for {symbol}.")
         warnings=["Free Yahoo Finance data may be delayed, incomplete, rate-limited, or changed without notice. Verify official filings."]
         info=_optional(lambda:ticker.info) or {}
-        if not info:warnings.append("Detailed company profile was partly unavailable.")
+        profile_complete=bool(info)
+        if not profile_complete:warnings.append("Detailed company profile was partly unavailable.")
+        if not (info.get("longName") and info.get("sector")):info={**_search_profile(yf,symbol),**{key:value for key,value in info.items() if value is not None}}
         cashflow=_optional(lambda:ticker.cashflow);income=_optional(lambda:ticker.income_stmt);balance=_optional(lambda:ticker.balance_sheet)
         # Foreign listings (ADRs such as TSM) report in their home currency; convert so per-share values match the quoted price.
         currency=info.get("currency") or ("INR" if market in {"NSE","BSE"} else "USD");reporting=info.get("financialCurrency") or currency;fx=1.0
@@ -530,7 +539,7 @@ def _fetch_stock(symbol:str,market:str,database,force_refresh:bool,allow_stale:O
             peer_median_ev_revenue=peers.get("ev_revenue"),peer_pe_growth_fit=list(peers.get("pe_growth_fit") or []),peer_pb_roe_fit=list(peers.get("pb_roe_fit") or []),
             promoter_pledge=verification.promoter_pledge if verification is not None else None,dividend_payout=_number(info.get("payoutRatio")),stock_based_compensation=sbc_values[0] if sbc_values else None)
         # Without the profile there is no sector, so no sector model; keep it out of the cache so the next run retries.
-        if info:
+        if profile_complete:
             try:database.save_stock(result)
             except Exception:result.warnings.append("Local cache could not be updated; this analysis used freshly retrieved data.")
         return result

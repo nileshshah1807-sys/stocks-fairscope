@@ -116,4 +116,11 @@ class StockLoaderTests(unittest.TestCase):
         outcome,database=self.fetch(fake_yfinance(ValueError("Invalid crumb")))
         self.assertEqual(outcome.price,100.0);self.assertIn("Detailed company profile was partly unavailable.",outcome.warnings);self.assertIsNone(database.load_stock("TEST","US",allow_expired=True))
 
+    def test_search_fills_name_and_sector_when_profile_is_refused(self):
+        fake=fake_yfinance(ValueError("Invalid crumb"))
+        fake.Search=lambda *args,**kwargs:types.SimpleNamespace(quotes=[{"symbol":"OTHER","longname":"Wrong Co","sector":"Utilities"},{"symbol":"TEST","longname":"Test Corporation","sector":"Industrials","industry":"Engineering & Construction"}])
+        outcome,database=self.fetch(fake)
+        self.assertEqual((outcome.company,outcome.sector,outcome.industry),("Test Corporation","Industrials","Engineering & Construction"))
+        self.assertIsNone(database.load_stock("TEST","US",allow_expired=True))
+
 if __name__=="__main__":unittest.main()
