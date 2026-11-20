@@ -29,6 +29,7 @@ st.set_page_config(page_title="Stocks FairScope", layout="wide")
 def analyze(symbol: str, market: str) -> ValuationResult:
     # One hour of caching per ticker keeps repeat visits from re-querying Yahoo, which rate-limits shared cloud addresses;
     # the desktop batch retry backs off on rate limits. Raised errors are not cached, so the next click tries again.
+    # Editing this function's source clears the cache (Streamlit keys it on the code), e.g. after an engine fix.
     outcome = analyze_with_retry(0, BatchItem(symbol, market), JobControl(), retries=3)
     if outcome.result is None:
         raise DataProviderError(outcome.error or f"Could not value {symbol}.")
