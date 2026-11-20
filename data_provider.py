@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import sec_facts
 from fundamentals import cagr, level_adjusted_long_median, normalized_cash_flows
-from india_sources import screener_asset_quality, screener_long_history, verify_indian_stock
+from india_sources import screener_asset_quality, screener_long_history, screener_profile, verify_indian_stock
 from local_database import get_local_database
 from logger import get_logger
 from secure_storage import SecureStorage, data_directory
@@ -355,7 +355,10 @@ def _fetch_stock(symbol:str,market:str,database,force_refresh:bool,allow_stale:O
         info=_optional(lambda:ticker.info) or {}
         profile_complete=bool(info)
         if not profile_complete:warnings.append("Detailed company profile was partly unavailable.")
-        if not (info.get("longName") and info.get("sector")):info={**_search_profile(yf,symbol),**{key:value for key,value in info.items() if value is not None}}
+        # Shared cloud addresses are often refused Yahoo's profile (and its search); Screener.in still answers for Indian listings.
+        for backup in (lambda:_search_profile(yf,symbol),lambda:screener_profile(symbol) if market in {"NSE","BSE"} else {}):
+            if info.get("longName") and info.get("sector"):break
+            info={**backup(),**{key:value for key,value in info.items() if value is not None}}
         cashflow=_optional(lambda:ticker.cashflow);income=_optional(lambda:ticker.income_stmt);balance=_optional(lambda:ticker.balance_sheet)
         # Foreign listings (ADRs such as TSM) report in their home currency; convert so per-share values match the quoted price.
         currency=info.get("currency") or ("INR" if market in {"NSE","BSE"} else "USD");reporting=info.get("financialCurrency") or currency;fx=1.0

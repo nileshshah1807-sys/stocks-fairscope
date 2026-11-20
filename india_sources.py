@@ -48,6 +48,15 @@ def _screener_page(symbol:str)->tuple[str,str,str]:
         response.raise_for_status();return response.text,url,""
     except Exception as exc:return "",url,f"Screener.in verification unavailable: {type(exc).__name__}."
 
+def screener_profile(symbol:str)->dict[str,str]:
+    """Company name, broad sector, and industry from the Screener.in company page (Yahoo's field names)."""
+    text=_screener_page(symbol)[0]
+    if not text:return {}
+    soup=BeautifulSoup(text,"html.parser");heading=soup.select_one("h1")
+    found={link["title"]:link.get_text(strip=True) for link in soup.select("a[title]") if link.get("title") in ("Broad Sector","Industry")}
+    profile={"longName":heading.get_text(" ",strip=True) if heading else "","sector":found.get("Broad Sector",""),"industry":found.get("Industry","")}
+    return {key:value for key,value in profile.items() if value}
+
 @ttl_cache(PAGE_TTL_SECONDS,cache_if=lambda result:bool(result[0]))
 def fetch_screener(symbol:str)->tuple[dict[str,float],str,str]:
     text,url,error=_screener_page(symbol)

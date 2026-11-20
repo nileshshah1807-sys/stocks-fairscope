@@ -50,10 +50,10 @@ class FreeDataProviderTests(unittest.TestCase):
 
 
 class StockLoaderTests(unittest.TestCase):
-    def fetch(self,yf,symbol="TEST",market="US",verification=None,sec=None):
+    def fetch(self,yf,symbol="TEST",market="US",verification=None,sec=None,screener=None):
         data_provider._fx_rate.cache_clear()
         handle=tempfile.NamedTemporaryFile(suffix=".db",delete=False);handle.close();os.unlink(handle.name);database=LocalDatabase(handle.name);self.addCleanup(lambda:os.path.exists(handle.name) and os.unlink(handle.name));self.addCleanup(database.close)
-        with patch.dict(sys.modules,{"yfinance":yf}),patch.object(data_provider,"_fetch_peers",return_value=EMPTY_PEERS),patch.object(data_provider,"_index_monthly",return_value={}),patch.object(data_provider,"verify_indian_stock",return_value=verification),patch.object(data_provider,"_sec_history",return_value=sec):
+        with patch.dict(sys.modules,{"yfinance":yf}),patch.object(data_provider,"_fetch_peers",return_value=EMPTY_PEERS),patch.object(data_provider,"_index_monthly",return_value={}),patch.object(data_provider,"verify_indian_stock",return_value=verification),patch.object(data_provider,"_sec_history",return_value=sec),patch.object(data_provider,"screener_profile",return_value=screener or {}) as self.screener_profile:
             try:return data_provider._fetch_stock(symbol,market,database,True,False),database
             except data_provider.DataProviderError as exc:return exc,database
 
@@ -121,6 +121,10 @@ class StockLoaderTests(unittest.TestCase):
         fake.Search=lambda *args,**kwargs:types.SimpleNamespace(quotes=[{"symbol":"OTHER","longname":"Wrong Co","sector":"Utilities"},{"symbol":"TEST","longname":"Test Corporation","sector":"Industrials","industry":"Engineering & Construction"}])
         outcome,database=self.fetch(fake)
         self.assertEqual((outcome.company,outcome.sector,outcome.industry),("Test Corporation","Industrials","Engineering & Construction"))
-        self.assertIsNone(database.load_stock("TEST","US",allow_expired=True))
+        self.assertIsNone(database.load_stock("TEST","US",allow_expired=True));self.screener_profile.assert_not_called()
+
+    def test_screener_fills_indian_profile_when_yahoo_refuses_both(self):
+        outcome,_database=self.fetch(fake_yfinance(ValueError("Invalid crumb")),"TEST.NS","NSE",IndiaSourceResult(),screener={"longName":"Test Industries Ltd","sector":"Industrials","industry":"Civil Construction"})
+        self.assertEqual((outcome.company,outcome.sector,outcome.industry),("Test Industries Ltd","Industrials","Civil Construction"))
 
 if __name__=="__main__":unittest.main()
