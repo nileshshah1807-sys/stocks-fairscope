@@ -25,11 +25,15 @@ class WebVersionTests(unittest.TestCase):
         dates=[(date(2026,1,1)+timedelta(days=index)).isoformat() for index in range(80)]
         offline=StockData(symbol="TEST",company="Test Corp",market="US",currency="USD",price=50,shares=100,free_cash_flow=800,eps=5,book_value_per_share=25,growth_estimate=.07,fcf_history=[800,760,720],revenue_history=[4000,3800,3600],price_history=[40+index*.1 for index in range(80)],price_dates=dates)
         # The page fetches through the desktop retry helper, which holds its own reference to fetch_stock.
-        with patch.object(background_processing,"fetch_stock",return_value=offline):
+        import stock_search
+        match=stock_search.StockSearchResult("TEST","Test Corp","US","NASDAQ","test")
+        with patch.object(background_processing,"fetch_stock",return_value=offline),patch.object(stock_search,"search_stocks",return_value=(match,)) as search:
             app=AppTest.from_file(str(ROOT/"web"/"streamlit_app.py"),default_timeout=120).run()
-            app.text_input[0].input("TEST");app.button[0].click();app.run()
+            app.text_input[0].input("test c").run()
+            search.assert_called_with("test c","US",10);self.assertEqual(app.selectbox[1].value,match)
+            app.button[0].click().run()
         self.assertFalse(app.exception);metrics={metric.label:metric.value for metric in app.metric}
-        self.assertEqual(metrics["Market price"],"USD 50.00");self.assertIn("Implied return / year",metrics);self.assertEqual(app.subheader[0].value,"Test Corp · TEST")
+        self.assertEqual(metrics["Market price"],"USD 50.00");self.assertIn("Implied return / year",metrics);self.assertEqual(app.subheader[0].value,"Test Corp (TEST)");self.assertTrue(any(m.value.startswith("**Sector:**") for m in app.markdown))
         self.assertTrue(any(type(element).__name__=="DownloadButton" for element in app.main))
 
     def test_space_bundle_is_self_contained(self):

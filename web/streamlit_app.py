@@ -12,6 +12,7 @@ import streamlit as st
 # The engine lives in the repository root; this page sits in web/ so Streamlit Cloud installs web/requirements.txt, not the desktop list.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import stock_search
 from background_processing import JobControl, analyze_with_retry
 from batch_import import BatchItem
 from data_provider import DataProviderError
@@ -30,6 +31,12 @@ def analyze(symbol: str, market: str) -> ValuationResult:
     if outcome.result is None:
         raise DataProviderError(outcome.error or f"Could not value {symbol}.")
     return outcome.result
+
+
+@st.cache_data(ttl=3600, show_spinner=False, max_entries=500)
+def find_companies(query: str, market: str):
+    # Same search as the desktop app: Yahoo for US, Screener.in for NSE/BSE; partial names such as "reli" work.
+    return stock_search.search_stocks(query, market, 10)
 
 
 def money(value, currency):
@@ -53,17 +60,20 @@ def pdf_bytes(analysis_id: str, _result: ValuationResult) -> bytes:
 st.title("Stocks FairScope")
 st.caption(f"DR. NILESH SHAH • {MODEL_VERSION} • v{APP_VERSION} • Educational fair-value estimate, not investment advice • Free Yahoo / Screener.in / NSE / BSE data can be delayed or unavailable")
 
-with st.form("analyze"):
-    market_column, symbol_column, button_column = st.columns([1, 3, 1])
-    market = market_column.selectbox("Market", ["US", "NSE", "BSE"])
-    symbol = symbol_column.text_input("Ticker", value="AAPL", help="Exchange suffixes are added automatically, e.g. RELIANCE on NSE.")
-    button_column.write("")
-    submitted = button_column.form_submit_button("Analyze", type="primary", width="stretch")
+market_column, query_column = st.columns([1, 4])
+market = market_column.selectbox("Market", ["US", "NSE", "BSE"])
+query = query_column.text_input("Company name or ticker", value="Apple", help="Type the first few letters of the company name (or its ticker) and press Enter, then pick the company below.").strip()
+matches = find_companies(query, market) if len(query) >= 2 else ()
+pick_column, button_column = st.columns([4, 1])
+choice = pick_column.selectbox("Select company", matches, format_func=lambda match: match.display, index=0 if matches else None,
+                               placeholder="Type at least 2 letters above and press Enter" if len(query) < 2 else "No matching company found", disabled=not matches)
+button_column.write("")
+submitted = button_column.button("Analyze", type="primary", width="stretch", disabled=choice is None)
 
-if submitted and symbol.strip():
-    with st.spinner(f"Retrieving data and valuing {symbol.strip().upper()}…"):
+if submitted and choice is not None:
+    with st.spinner(f"Retrieving data and valuing {choice.company} ({choice.symbol})…"):
         try:
-            st.session_state["result"] = analyze(symbol.strip().upper(), market)
+            st.session_state["result"] = analyze(choice.symbol, market)
         except (DataProviderError, ValueError) as exc:
             st.session_state.pop("result", None)
             st.error(str(exc))
@@ -71,8 +81,9 @@ if submitted and symbol.strip():
 result: ValuationResult | None = st.session_state.get("result")
 if result:
     data, currency = result.data, result.data.currency
-    st.subheader(f"{data.company} · {data.symbol}")
-    st.caption(f"{data.market} • {data.sector} • {data.industry} • {result.methodology_profile} • data: {data.data_provider}")
+    st.subheader(f"{data.company} ({data.symbol})")
+    st.markdown(f"**Sector:** {data.sector or 'Not reported'} • **Industry:** {data.industry or 'Not reported'} • **Market:** {data.market}")
+    st.caption(f"{result.methodology_profile} • data: {data.data_provider}")
     required = (result.cost_of_capital or {}).get("cost_of_equity")
     price, fair, upside, buffer, implied = st.columns(5)
     price.metric("Market price", money(data.price, currency))
