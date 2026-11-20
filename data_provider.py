@@ -339,7 +339,7 @@ def _fetch_stock(symbol:str,market:str,database,force_refresh:bool,allow_stale:O
     stale_allowed=database.allow_stale_fallback() if allow_stale is None else allow_stale
     if not force_refresh:
         cached=database.load_stock(symbol,market,allow_expired=False)
-        if cached is not None:return cached
+        if cached is not None and cached.sector!="Not available":return cached  # snapshots saved without a profile by older versions are refetched
     try:
         import yfinance as yf
     except ImportError as exc:
@@ -353,8 +353,8 @@ def _fetch_stock(symbol:str,market:str,database,force_refresh:bool,allow_stale:O
         if not price or price<=0:raise DataProviderError(f"No valid latest price found for {symbol}.")
         warnings=["Free Yahoo Finance data may be delayed, incomplete, rate-limited, or changed without notice. Verify official filings."]
         info=_optional(lambda:ticker.info) or {}
-        profile_complete=bool(info)
-        if not profile_complete:warnings.append("Detailed company profile was partly unavailable.")
+        profile_complete=bool(info.get("sector"))  # partial profiles (price fields only) are not cached either
+        if not info:warnings.append("Detailed company profile was partly unavailable.")
         # Shared cloud addresses are often refused Yahoo's profile (and its search); Screener.in still answers for Indian listings.
         for backup in (lambda:_search_profile(yf,symbol),lambda:screener_profile(symbol) if market in {"NSE","BSE"} else {}):
             if info.get("longName") and info.get("sector"):break

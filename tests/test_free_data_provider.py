@@ -50,11 +50,11 @@ class FreeDataProviderTests(unittest.TestCase):
 
 
 class StockLoaderTests(unittest.TestCase):
-    def fetch(self,yf,symbol="TEST",market="US",verification=None,sec=None,screener=None):
+    def fetch(self,yf,symbol="TEST",market="US",verification=None,sec=None,screener=None,database=None,force_refresh=True):
         data_provider._fx_rate.cache_clear()
-        handle=tempfile.NamedTemporaryFile(suffix=".db",delete=False);handle.close();os.unlink(handle.name);database=LocalDatabase(handle.name);self.addCleanup(lambda:os.path.exists(handle.name) and os.unlink(handle.name));self.addCleanup(database.close)
+        if database is None:handle=tempfile.NamedTemporaryFile(suffix=".db",delete=False);handle.close();os.unlink(handle.name);database=LocalDatabase(handle.name);self.addCleanup(lambda:os.path.exists(handle.name) and os.unlink(handle.name));self.addCleanup(database.close)
         with patch.dict(sys.modules,{"yfinance":yf}),patch.object(data_provider,"_fetch_peers",return_value=EMPTY_PEERS),patch.object(data_provider,"_index_monthly",return_value={}),patch.object(data_provider,"verify_indian_stock",return_value=verification),patch.object(data_provider,"_sec_history",return_value=sec),patch.object(data_provider,"screener_profile",return_value=screener or {}) as self.screener_profile:
-            try:return data_provider._fetch_stock(symbol,market,database,True,False),database
+            try:return data_provider._fetch_stock(symbol,market,database,force_refresh,False),database
             except data_provider.DataProviderError as exc:return exc,database
 
     def test_us_statements_become_normalized_inputs(self):
@@ -126,5 +126,13 @@ class StockLoaderTests(unittest.TestCase):
     def test_screener_fills_indian_profile_when_yahoo_refuses_both(self):
         outcome,_database=self.fetch(fake_yfinance(ValueError("Invalid crumb")),"TEST.NS","NSE",IndiaSourceResult(),screener={"longName":"Test Industries Ltd","sector":"Industrials","industry":"Civil Construction"})
         self.assertEqual((outcome.company,outcome.sector,outcome.industry),("Test Industries Ltd","Industrials","Civil Construction"))
+
+    def test_partial_profile_is_not_cached_and_old_sectorless_snapshots_are_refetched(self):
+        outcome,database=self.fetch(fake_yfinance({"currency":"USD","sharesOutstanding":100}))
+        self.assertEqual(outcome.sector,"Not available");self.assertIsNone(database.load_stock("TEST","US",allow_expired=True))
+        database.save_stock(outcome)  # as versions before this fix did
+        self.assertIsNotNone(database.load_stock("TEST","US"))
+        fresh,_database=self.fetch(fake_yfinance({"currency":"USD","sharesOutstanding":100,"sector":"Industrials","longName":"Test Corp"}),database=database,force_refresh=False)
+        self.assertEqual(fresh.sector,"Industrials")
 
 if __name__=="__main__":unittest.main()
