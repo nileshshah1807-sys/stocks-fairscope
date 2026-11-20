@@ -11,6 +11,8 @@ import streamlit as st
 
 # The engine lives in the repository root; this page sits in web/ so Streamlit Cloud installs web/requirements.txt, not the desktop list.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Streamlit reloads only modules in this folder or on PYTHONPATH; without this, a git push left the old engine running until a reboot.
+os.environ["PYTHONPATH"] = os.pathsep.join(filter(None, [str(Path(__file__).resolve().parents[1]), os.environ.get("PYTHONPATH")]))
 
 import stock_search
 from background_processing import JobControl, analyze_with_retry
